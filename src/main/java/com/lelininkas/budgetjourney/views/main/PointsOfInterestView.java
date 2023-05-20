@@ -2,6 +2,7 @@ package com.lelininkas.budgetjourney.views.main;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -78,21 +79,40 @@ public class PointsOfInterestView extends VerticalLayout {
                 .withValidator(budget -> budget > 0, "Budget must be greater than zero")
                 .bind(SearchCriteria::getBudget, SearchCriteria::setBudget);
 
+        IntegerField maxDistanceField = new IntegerField("Max distance:");
+        maxDistanceField.setWidth("300px");
+        maxDistanceField.getStyle().set("margin-right", "10px");
+        maxDistanceField.setPlaceholder("km");
+        maxDistanceField.setValue(30);
+
+        binder.forField(maxDistanceField)
+                .asRequired("Max distance is required")
+                .withValidator(budget -> budget > 0, "Max distance must be greater than zero")
+                .bind(SearchCriteria::getMaxDistance, SearchCriteria::setMaxDistance);
+
         // Create the search button
         searchButton = new Button("Go!");
         searchButton.getStyle().set("margin-top", "10px");
         searchButton.addClickListener(e -> searchPointsOfInterest());
         searchButton.setDisableOnClick(true);
 
-        userInputLayout.add(cityField, budgetField, searchButton);
+        userInputLayout.add(cityField, budgetField, maxDistanceField, searchButton);
 
         add(logoLayout, userInputLayout);
 
         // Create the grid to display the points of interest
         grid = new Grid<>();
-        grid.addColumn(PointOfInterest::getName).setHeader("Place").setFlexGrow(1);
-        grid.addColumn(PointOfInterest::getInfo).setHeader("Info").setFlexGrow(2);
+        grid.addColumn(PointOfInterest::getName).setHeader("Place").setFlexGrow(2);
+        grid.addColumn(PointOfInterest::getInfo).setHeader("Info").setFlexGrow(4);
         grid.addColumn(this::renderCost).setHeader("Price").setFlexGrow(0);
+        grid.addColumn(PointOfInterest::getDistance).setHeader("Distance").setFlexGrow(0);
+        grid.addComponentColumn(item ->  {
+            Anchor anchor = new Anchor();
+            anchor.getElement().setAttribute("target", "_blank");
+            anchor.setText("Show on map");
+            anchor.setHref(item.getMapUrl());
+            return anchor;
+        }).setHeader("Location").setFlexGrow(1);
         grid.setSelectionMode(Grid.SelectionMode.NONE);
 
         add(grid);
@@ -111,7 +131,9 @@ public class PointsOfInterestView extends VerticalLayout {
             // Call the suggestPointsOfInterest method and update the grid with the results
 
             PointsOfInterestResponse response = tripsAdvisorService
-                    .suggestPointsOfInterest(searchCriteria.getCity(), searchCriteria.getBudget());
+                    .suggestPointsOfInterest(searchCriteria.getCity(),
+                            searchCriteria.getBudget(),
+                            searchCriteria.getMaxDistance());
 
             if (response.getError() != null) {
                 showErrorMessage(String.format("Failed loading data from OpenAI GPT: %n%s", response.getError()));
@@ -127,6 +149,8 @@ public class PointsOfInterestView extends VerticalLayout {
         private String city;
         private int budget;
 
+        private int maxDistance;
+
         public String getCity() {
             return city;
         }
@@ -141,6 +165,14 @@ public class PointsOfInterestView extends VerticalLayout {
 
         public void setBudget(int budget) {
             this.budget = budget;
+        }
+
+        public int getMaxDistance() {
+            return maxDistance;
+        }
+
+        public void setMaxDistance(int maxDistance) {
+            this.maxDistance = maxDistance;
         }
     }
 

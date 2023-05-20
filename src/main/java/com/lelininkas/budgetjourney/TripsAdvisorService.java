@@ -38,13 +38,13 @@ public class TripsAdvisorService {
             You are an API server that responds in a JSON format.
             Don't say anything else. Respond only with the JSON.
 
-            The user will provide you with a city name and available budget. Considering the budget limit, you must suggest a list of places to visit.
+            The user will provide you with a city name, available budget and maximum distance from city center. Considering the budget limit, and maximum distance from city center you must suggest a list of places to visit.
             Allocate 30% of the budget to restaurants and bars.
             Allocate another 30% to shows, amusement parks, and other sightseeing.
             And dedicate the remainder of the budget to shopping. Remember, the user must spend 90-100% of the budget.
 
             Respond in a JSON format, including an array named 'places'. Each item of the array is another JSON object that includes 'place_name' as a text,
-            'place_short_info' as a text, and 'place_visit_cost' as a number.
+            'place_short_info' as a text, 'place_visit_cost' as a number, 'place_distance_in_km_from_city_center' as a number, and 'place_google_map_url' as a text.
 
             Don't add anything else in the end after you respond with the JSON.
             """;
@@ -57,7 +57,7 @@ public class TripsAdvisorService {
         System.out.println("Connected to the OpenAI API");
     }
 
-    public PointsOfInterestResponse suggestPointsOfInterest(String city, int budget) {
+    public PointsOfInterestResponse suggestPointsOfInterest(String city, int budget, int maxDistance) {
         String poi = cityTripsRepository.findPointsOfInterest(city, budget, "US");
 
         try {
@@ -66,7 +66,8 @@ public class TripsAdvisorService {
             if (poi != null) {
                 poiList = generaPointsOfInterest(poi);
             } else {
-                String request = String.format("I want to visit %s and have a budget of %d dollars", city, budget);
+                String request = String.format("I want to visit %s, have a budget of %d dollars and it should" +
+                        " not be more that %d km away from %s city center", city, budget, maxDistance, city);
                 poi = sendMessage(request);
 
                 poiList = generaPointsOfInterest(poi);
@@ -121,7 +122,9 @@ public class TripsAdvisorService {
             PointOfInterest poi = new PointOfInterest(
                     place.getString("place_name"),
                     place.getString("place_short_info"),
-                    place.getInt("place_visit_cost"));
+                    place.getInt("place_visit_cost"),
+                    place.getInt("place_distance_in_km_from_city_center"),
+                    place.getString("place_google_map_url"));
 
             System.out.println(poi);
             poiList.add(poi);

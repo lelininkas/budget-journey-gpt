@@ -4,11 +4,15 @@ public class PointOfInterest {
     private String name;
     private String info;
     private int cost;
+    private int distance;
+    private String mapUrl;
 
-    public PointOfInterest(String name, String info, int cost) {
+    public PointOfInterest(String name, String info, int cost, int distance, String mapUrl) {
         this.name = name;
         this.info = info;
         this.cost = cost;
+        this.distance = distance;
+        this.mapUrl = mapUrl;
     }
 
     public String getName() {
@@ -33,6 +37,22 @@ public class PointOfInterest {
 
     public void setCost(int cost) {
         this.cost = cost;
+    }
+
+    public void setDistance(int distance) {
+        this.distance = distance;
+    }
+
+    public void setMapUrl(String mapUrl) {
+        this.mapUrl = mapUrl;
+    }
+
+    public int getDistance() {
+        return distance;
+    }
+
+    public String getMapUrl() {
+        return mapUrl;
     }
 
     @Override
